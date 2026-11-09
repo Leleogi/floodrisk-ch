@@ -1,0 +1,22 @@
+name: floodrisk
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy
+  - pandas
+  - xarray
+  - netcdf4
+  - rasterio
+  - geopandas
+  - pyproj
+  - shapely
+  - requests
+  - pyyaml
+  - matplotlib
+  - jupyterlab
+  - pytest
+  - pip
+  - pip:
+      - cdsapi
+      - pysheds

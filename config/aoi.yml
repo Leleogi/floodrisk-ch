@@ -1,0 +1,11 @@
+# Areas of interest as WGS84 bounding boxes: [west, south, east, north]
+# Rough boxes, refine later with official municipality/canton boundaries (swissBOUNDARIES3D).
+zurich:
+  description: City of Zurich (approx.)
+  bbox: [8.44, 47.32, 8.63, 47.44]
+  dem_resolution_m: 2
+
+zug:
+  description: Canton Zug (approx.) - fallback if Zurich is too heavy
+  bbox: [8.40, 47.10, 8.62, 47.25]
+  dem_resolution_m: 2
