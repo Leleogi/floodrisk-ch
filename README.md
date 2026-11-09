@@ -9,8 +9,9 @@ hazard map plus a building-level risk estimate.
 Risk = Hazard (where does water go?) x Exposure (which buildings?) x Vulnerability (how badly hurt?)
 ```
 
-Status: **early scaffold.** Phase 1 (terrain + data download) is implemented but has not yet
-been run end-to-end. See `docs/PLAN.md` for the roadmap.
+Status: **early development.** Phase 1 (terrain + data download) and the first part of phase 2
+(Curve Number runoff) are implemented. Runoff functions are unit-tested; the data download and
+terrain steps have not yet been run end-to-end. See `docs/PLAN.md` for the roadmap.
 
 ## Pilot area
 
@@ -35,7 +36,12 @@ floodrisk terrain --aoi zurich
 
 # 5. download ERA5-Land for an event (needs a free CDS account, see docs/DATA_SOURCES.md)
 floodrisk era5 --aoi zurich --date 2021-07-13
+
+# 6. turn that event into Curve Number runoff (saves a NetCDF and a comparison plot)
+floodrisk runoff --aoi zurich --date 2021-07-13 --cn 80
 ```
+
+New to the topic? Read `docs/CONCEPTS.md` for a plain-language walkthrough of the model.
 
 ## Layout
 
@@ -47,7 +53,10 @@ src/floodrisk/
   data/era5.py          ERA5-Land download via the Copernicus CDS API
   data/meteoswiss.py    ICON-CH1/CH2-EPS forecast item listing (STAC)
   terrain.py            slope, flow accumulation, HAND
+  runoff.py             SCS Curve Number: rain to surface runoff
+  plots.py              event rain/runoff figure
   cli.py                `floodrisk` command line
+docs/CONCEPTS.md        how the model works, in plain language
 docs/PLAN.md            phases and milestones
 docs/DATA_SOURCES.md    data sources, licences, caveats
 tests/                  small unit tests (no network needed)
