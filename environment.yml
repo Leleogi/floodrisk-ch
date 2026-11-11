@@ -17,6 +17,9 @@ dependencies:
   - jupyterlab
   - pytest
   - pip
-  - pip:
-      - cdsapi
-      - pysheds
+  # Installed from conda-forge (not pip) so numba/llvmlite come as prebuilt
+  # binaries instead of being compiled from source (which needs cmake).
+  - numba
+  - scikit-image
+  - pysheds
+  - cdsapi
