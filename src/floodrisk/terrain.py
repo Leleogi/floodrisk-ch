@@ -14,6 +14,10 @@ from rasterio.merge import merge
 
 from floodrisk.config import AOI, DATA_INTERIM, DATA_PROCESSED, DATA_RAW
 
+# pysheds 0.5 still calls np.in1d, which numpy 2.4 removed (np.isin is the replacement).
+if not hasattr(np, "in1d"):
+    np.in1d = np.isin
+
 
 def mosaic_tiles(aoi: AOI) -> Path:
     """Merge downloaded DEM tiles into one GeoTIFF (EPSG:2056)."""
@@ -76,10 +80,12 @@ def compute_indicators(aoi: AOI, stream_threshold_cells: int = 5000) -> dict[str
         return path
 
     dem_f = dem_arr.astype("float64")
-    if nodata is not None:
-        dem_f[dem_arr == nodata] = np.nan
+    nodata_mask = (dem_arr == nodata) if nodata is not None else np.zeros(dem_arr.shape, bool)
+    dem_f[nodata_mask] = np.nan
 
-    _write("slope", slope_degrees(np.nan_to_num(dem_f, nan=np.nanmean(dem_f)), cell))
+    slope = slope_degrees(np.nan_to_num(dem_f, nan=np.nanmean(dem_f)), cell)
+    slope[nodata_mask] = np.nan
+    _write("slope", slope)
 
     grid = Grid.from_raster(str(dem_path))
     dem = grid.read_raster(str(dem_path))
@@ -88,9 +94,15 @@ def compute_indicators(aoi: AOI, stream_threshold_cells: int = 5000) -> dict[str
     inflated = grid.resolve_flats(filled)
     fdir = grid.flowdir(inflated)
     acc = grid.accumulation(fdir)
-    _write("flowacc", np.asarray(acc, dtype="float64"))
+    acc_arr = np.asarray(acc, dtype="float64")
+    acc_arr[nodata_mask] = np.nan
+    _write("flowacc", acc_arr)
 
     streams = acc > stream_threshold_cells
-    hand = grid.compute_hand(fdir, inflated, streams)
-    _write("hand", np.asarray(hand, dtype="float64"))
+    hand = np.asarray(grid.compute_hand(fdir, inflated, streams), dtype="float64")
+    # Cells whose flow path leaves the DEM into a nodata gap get measured against the nodata
+    # value (-9999) and end up with HAND in the thousands of metres. A real HAND can never
+    # exceed the cell's height above the lowest valid DEM cell, so mask anything above that.
+    hand[nodata_mask | (hand > dem_f - np.nanmin(dem_f))] = np.nan
+    _write("hand", hand)
     return results
